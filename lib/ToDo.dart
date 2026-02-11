@@ -69,18 +69,24 @@ class _ToDoState extends State<ToDo> {
 
                 itemCount: todos.length,
                 itemBuilder: (context, index) {
-                  return Card (
-                      child: ListTile(
+                  return GestureDetector(
+                    onHorizontalDragEnd: (details) => setState(() {
+                        removeTodo(index);
+                    }),
 
-                        trailing: IconButton(
-                            onPressed: () {removeTodo(index);},
-                            icon: const Icon(Icons.delete),
-                            color: Colors.red,
+                    child: Card (
+                        child: ListTile(
 
-                        ),
+                          trailing: IconButton(
+                              onPressed: () {removeTodo(index);},
+                              icon: const Icon(Icons.delete),
+                              color: Colors.red,
 
-                    title: Text(todos[index]),
-                  ) )   ;
+                          ),
+
+                      title: Text(todos[index]),
+                    ) ),
+                  )   ;
 
 
 
