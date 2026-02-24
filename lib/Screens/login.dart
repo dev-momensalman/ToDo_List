@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:momensalman/Model/TodoModel.dart';
 import 'Todo.dart';
+import 'package:momensalman/Screens/users_screen.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,20 +16,16 @@ class _LoginPageState extends State<LoginPage> {
   bool isObscure = true;
 
   void login() {
-    // التحقق من البيانات
     if (mailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-      if (mailController.text == "Admin" &&
-          passwordController.text == "Admin") {
-        // تنظيف الحقول قبل الانتقال
+      if (mailController.text == "Admin" && passwordController.text == "Admin") {
         mailController.clear();
         passwordController.clear();
 
-        // الانتقال لشاشة المهام واستبدال شاشة اللوجن (عشان ميرجعش بظهره للوجن تاني)
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => const TodoScreen(),
-          ), // اتأكد إن الاسم مطابق للكلاس في ملف Todo.dart
+          ),
         );
       } else {
         showError("Invalid Username or Password");
@@ -43,7 +41,9 @@ class _LoginPageState extends State<LoginPage> {
         content: Text(message),
         backgroundColor: const Color(0xFFFF7675),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -66,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // أيقونة اللوجن مع خلفية خفيفة
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -91,11 +90,13 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 10),
                 const Text(
                   "Log in to manage your tasks",
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
-                // حقل اسم المستخدم
                 _buildTextField(
                   controller: mailController,
                   hint: "Username",
@@ -103,7 +104,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
 
-                // حقل كلمة المرور
                 _buildTextField(
                   controller: passwordController,
                   hint: "Password",
@@ -112,11 +112,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // زر الدخول
                 ElevatedButton(
                   onPressed: login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5CD2E7),
+                    backgroundColor: const Color(0xFF6C5CE7),
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 60),
                     elevation: 0,
@@ -126,7 +125,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: const Text(
                     "Login",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -160,13 +162,14 @@ class _LoginPageState extends State<LoginPage> {
         obscureText: isPassword ? isObscure : false,
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: Icon(icon, color: const Color(0xFF6C5CE7)),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF6C5CE7),
+          ),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    isObscure
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
+                    isObscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
                     color: Colors.grey,
                   ),
                   onPressed: () => setState(() => isObscure = !isObscure),

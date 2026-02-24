@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'Provider/TodoProvider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// تأكد من أن المسار هنا يطابق مكان الملف في مشروعك
+import 'Model/BLOC/TodoBloC.dart';
 import 'Screens/login.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => TodoProvider(),
+    BlocProvider(
+      // تأكد من كتابة الاسم بنفس حالة الأحرف TodoBloC
+      create: (context) => TodoBloC(),
       child: const MyApp(),
     ),
   );
@@ -19,12 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Task Manager',
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.deepPurple,
-      ),
-      home: const LoginPage(), // تبدأ بصفحة تسجيل الدخول التي أعددتها
+      theme: ThemeData(useMaterial3: true),
+      home: const LoginPage(),
     );
   }
 }
