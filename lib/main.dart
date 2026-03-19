@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:momensalman/Screens/AuthGate.dart';
-import 'Model/BLOC/note_bloc.dart';
+import 'package:momensalman/views/auth/auth_gate_view.dart';
 
 void main() {
-  runApp(
-    BlocProvider(
-      create: (context) => NoteBloc(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -19,8 +12,24 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
-      home: const Authgate(),
+      title: 'CloudNote - MVC Architecture',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6C5CE7),
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: Color(0xFF6C5CE7),
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF6C5CE7),
+          foregroundColor: Colors.white,
+        ),
+      ),
+      home: const AuthGateView(),
     );
   }
 }
