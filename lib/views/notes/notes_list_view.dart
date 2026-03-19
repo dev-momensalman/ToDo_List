@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../models/note_model.dart';
 import '../../controllers/note_controller.dart';
+import '../../controllers/firebase_auth_controller.dart';
 
 class NotesListView extends StatefulWidget {
   final NoteController controller;
+  final FirebaseAuthController? authController;
 
-  const NotesListView({super.key, required this.controller});
+  const NotesListView({
+    super.key,
+    required this.controller,
+    this.authController,
+  });
 
   @override
   State<NotesListView> createState() => _NotesListViewState();
@@ -27,17 +33,21 @@ class _NotesListViewState extends State<NotesListView> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text("CloudNote"),
+        title: Text(
+          "CloudNote - ${widget.authController?.userDisplayName ?? 'User'}",
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             onPressed: () async {
-              await widget.controller.logout(context);
+              if (widget.authController != null) {
+                await widget.authController!.signOut();
+              }
             },
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             tooltip: "Logout",
-          )
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -65,10 +75,7 @@ class _NotesListViewState extends State<NotesListView> {
                   const SizedBox(height: 20),
                   const Text(
                     "No notes yet!",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 5),
                   const Text("Tap + to add a new note"),
@@ -132,9 +139,11 @@ class _NotesListViewState extends State<NotesListView> {
                   child: Text(
                     note.title,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold, 
+                      fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      decoration: note.isDone ? TextDecoration.lineThrough : null,
+                      decoration: note.isDone
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                   ),
                 ),
@@ -159,7 +168,7 @@ class _NotesListViewState extends State<NotesListView> {
               Text(
                 note.description!,
                 style: TextStyle(
-                  color: Colors.grey[600], 
+                  color: Colors.grey[600],
                   fontSize: 14,
                   decoration: note.isDone ? TextDecoration.lineThrough : null,
                 ),
@@ -168,10 +177,7 @@ class _NotesListViewState extends State<NotesListView> {
             const SizedBox(height: 8),
             Text(
               'Created: ${_formatDate(note.createdAt)}',
-              style: TextStyle(
-                color: Colors.grey[500], 
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
           ],
         ),
@@ -190,7 +196,9 @@ class _NotesListViewState extends State<NotesListView> {
   void _showNoteDialog({Note? note}) {
     final isEditing = note != null;
     final titleController = TextEditingController(text: note?.title ?? '');
-    final descriptionController = TextEditingController(text: note?.description ?? '');
+    final descriptionController = TextEditingController(
+      text: note?.description ?? '',
+    );
 
     showDialog(
       context: context,
@@ -222,16 +230,16 @@ class _NotesListViewState extends State<NotesListView> {
                   widget.controller.updateNote(
                     note!.copyWith(
                       title: titleController.text,
-                      description: descriptionController.text.isEmpty 
-                          ? null 
+                      description: descriptionController.text.isEmpty
+                          ? null
                           : descriptionController.text,
                     ),
                   );
                 } else {
                   widget.controller.addNote(
                     title: titleController.text,
-                    description: descriptionController.text.isEmpty 
-                        ? null 
+                    description: descriptionController.text.isEmpty
+                        ? null
                         : descriptionController.text,
                   );
                 }

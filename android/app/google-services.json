@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10173639665",
+    "project_id": "momen-todo-depi-22664",
+    "storage_bucket": "momen-todo-depi-22664.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10173639665:android:5643f7b9bea008e15bf250",
+        "android_client_info": {
+          "package_name": "com.example.momensalman"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhcOYZQm3FHEQ7r1ttn3L4f70XHr27mJ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

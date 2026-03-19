@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/note_controller.dart';
 import 'login_view.dart';
 import '../notes/notes_list_view.dart';
 
@@ -12,17 +13,20 @@ class AuthGateView extends StatefulWidget {
 
 class _AuthGateViewState extends State<AuthGateView> {
   late final AuthController _authController;
+  late final NoteController _noteController;
 
   @override
   void initState() {
     super.initState();
     _authController = AuthController();
+    _noteController = NoteController();
     _authController.checkAuthStatus();
   }
 
   @override
   void dispose() {
     _authController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
@@ -41,7 +45,7 @@ class _AuthGateViewState extends State<AuthGateView> {
           valueListenable: _authController.isLoggedIn,
           builder: (context, isLoggedIn, _) {
             if (isLoggedIn) {
-              return NotesListView(controller: _authController.noteController);
+              return NotesListView(controller: _noteController);
             } else {
               return LoginView(controller: _authController);
             }
