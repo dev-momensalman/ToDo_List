@@ -20,11 +20,20 @@ dependencies:
   path: ^1.9.0
   
   # Firebase Dependencies
-  firebase_core: ^2.24.2
-  firebase_auth: ^4.16.0
-  cloud_firestore: ^4.14.0
-  firebase_ui_auth: ^1.7.0
-  google_sign_in: ^6.2.1 
+  firebase_core: ^2.32.0
+  firebase_auth: ^4.17.5
+  cloud_firestore: ^4.17.5
+  firebase_ui_auth: ^1.13.0
+  google_sign_in: ^6.3.0
+  
+  # Firebase Cloud Messaging
+  firebase_messaging: ^14.7.10
+  
+  # Local Notifications
+  flutter_local_notifications: ^17.2.2
+  
+  # Web compatibility
+  js: ^0.7.1 
 
 dev_dependencies:
   flutter_test:

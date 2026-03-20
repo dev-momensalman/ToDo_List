@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../controllers/firebase_auth_controller.dart';
+import 'dart:developer';
 
 class FirebaseSignUpView extends StatefulWidget {
   const FirebaseSignUpView({super.key});
@@ -326,6 +327,72 @@ class _FirebaseSignUpViewState extends State<FirebaseSignUpView> {
                           ),
                           const SizedBox(height: 20),
 
+                          // OR divider
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  "OR",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Google Sign Up button
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _controller.isLoading,
+                            builder: (context, isLoading, _) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 55,
+                                child: OutlinedButton.icon(
+                                  onPressed: isLoading
+                                      ? null
+                                      : _handleGoogleSignUp,
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    "Sign up with Google",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.white),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
                           // Sign in link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -434,12 +501,30 @@ class _FirebaseSignUpViewState extends State<FirebaseSignUpView> {
 
   void _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
+      log('1- Start Email Sign Up');
       final success = await _controller.signUp();
+      log('2- After Email Sign Up - Success: $success');
       if (success && mounted) {
         _controller.showMessage(context, 'Account created successfully!');
-        // Navigate to login screen
-        Navigator.of(context).pop();
+        log('3- Navigating to Home');
+        Navigator.of(context).pushReplacementNamed('/home');
+        log('4- Navigation completed');
       }
+    }
+  }
+
+  void _handleGoogleSignUp() async {
+    log('1- Start Google Sign Up');
+    final success = await _controller.signInWithGoogle();
+    log('2- After Google Sign Up - Success: $success');
+    if (success && mounted) {
+      _controller.showMessage(
+        context,
+        'Account created with Google successfully!',
+      );
+      log('3- Navigating to Home');
+      Navigator.of(context).pushReplacementNamed('/home');
+      log('4- Navigation completed');
     }
   }
 }

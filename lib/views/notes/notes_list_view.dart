@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/note_model.dart';
 import '../../controllers/note_controller.dart';
 import '../../controllers/firebase_auth_controller.dart';
+import '../../services/notification_service.dart';
+import 'notification_test_view.dart';
+import 'dart:developer';
 
 class NotesListView extends StatefulWidget {
   final NoteController controller;
@@ -21,15 +24,42 @@ class _NotesListViewState extends State<NotesListView> {
   final Color primaryColor = const Color(0xFF6C5CE7);
   final Color accentColor = const Color(0xFF00CEC9);
   final Color bgColor = const Color(0xFFF8F9FD);
+  List<Note> _cachedNotes = []; // Cache notes
 
   @override
   void initState() {
     super.initState();
-    widget.controller.loadNotes();
+    log('NotesListView initState started');
+    
+    // Load notes asynchronously with error handling
+    _loadNotesAsync();
+  }
+
+  Future<void> _loadNotesAsync() async {
+    try {
+      log('Starting to load notes...');
+      final notes = await widget.controller.loadNotes();
+      log('Notes loaded successfully: ${notes.length} notes');
+      
+      if (mounted) {
+        setState(() {
+          _cachedNotes = notes;
+          log('UI updated with ${notes.length} notes');
+        });
+      }
+    } catch (e) {
+      log('Error loading notes: $e');
+      if (mounted) {
+        setState(() {
+          _cachedNotes = [];
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    log('Building NotesListView with ${_cachedNotes.length} cached notes');
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -38,6 +68,7 @@ class _NotesListViewState extends State<NotesListView> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        foregroundColor: Color(0xFF6C5CE7),
         actions: [
           IconButton(
             onPressed: () async {
@@ -47,6 +78,18 @@ class _NotesListViewState extends State<NotesListView> {
             },
             icon: const Icon(Icons.logout, color: Colors.redAccent),
             tooltip: "Logout",
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationTestView(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.notifications, color: Color(0xFF6C5CE7)),
+            tooltip: "Test Notifications",
           ),
         ],
       ),
@@ -61,8 +104,11 @@ class _NotesListViewState extends State<NotesListView> {
           if (widget.controller.isLoading.value) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          if (notes.isEmpty) {
+          
+          // Use cached notes for better performance
+          final displayNotes = _cachedNotes.isNotEmpty ? _cachedNotes : notes;
+          
+          if (displayNotes.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -83,13 +129,15 @@ class _NotesListViewState extends State<NotesListView> {
               ),
             );
           }
-
+          
           return ListView.builder(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(20),
-            itemCount: notes.length,
-            itemBuilder: (context, index) =>
-                _buildNoteCard(notes[index], index),
+            itemCount: displayNotes.length,
+            itemBuilder: (context, index) {
+              logger.log('Building note card for index: $index');
+              return _buildNoteCard(displayNotes[index], index);
+            },
           );
         },
       ),
@@ -97,10 +145,12 @@ class _NotesListViewState extends State<NotesListView> {
   }
 
   Widget _buildNoteCard(Note note, int index) {
+    log('Building note card: ${note.title}');
     return Dismissible(
       key: ValueKey(note.id ?? (note.title + index.toString())),
       direction: DismissDirection.endToStart,
       onDismissed: (_) {
+        log('Dismissing note: ${note.title}');
         if (note.id != null) {
           widget.controller.deleteNote(note.id!);
         }
@@ -126,35 +176,20 @@ class _NotesListViewState extends State<NotesListView> {
             BoxShadow(
               color: primaryColor.withOpacity(0.08),
               blurRadius: 15,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 5),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    note.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      decoration: note.isDone
-                          ? TextDecoration.lineThrough
-                          : null,
-                    ),
-                  ),
-                ),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: note.isDone,
-                      onChanged: (value) {
-                        widget.controller.toggleNoteStatus(note);
-                      },
-                    ),
+            Text(
+              note.title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20),
                       onPressed: () => _showEditNoteDialog(note),

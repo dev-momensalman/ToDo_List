@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../controllers/firebase_auth_controller.dart';
+import 'dart:developer';
 
 class FirebaseLoginView extends StatefulWidget {
   const FirebaseLoginView({super.key});
@@ -93,7 +94,7 @@ class _FirebaseLoginViewState extends State<FirebaseLoginView> {
                               letterSpacing: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 20),
                           const Text(
                             "Sign in to your account",
                             style: TextStyle(
@@ -293,6 +294,72 @@ class _FirebaseLoginViewState extends State<FirebaseLoginView> {
                           ),
                           const SizedBox(height: 20),
 
+                          // OR divider
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  "OR",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  height: 1,
+                                  color: Colors.white.withOpacity(0.3),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Google Sign In button
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _controller.isLoading,
+                            builder: (context, isLoading, _) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 55,
+                                child: OutlinedButton.icon(
+                                  onPressed: isLoading
+                                      ? null
+                                      : _handleGoogleSignIn,
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    "Sign in with Google",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.white),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 20),
+
                           // Sign up link
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -390,12 +457,27 @@ class _FirebaseLoginViewState extends State<FirebaseLoginView> {
 
   void _handleSignIn() async {
     if (_formKey.currentState!.validate()) {
+      log('1- Start Email Sign In');
       final success = await _controller.signIn();
+      log('2- After Email Sign In - Success: $success');
       if (success && mounted) {
         _controller.showMessage(context, 'Signed in successfully!');
-        // Navigate to home screen
+        log('3- Navigating to Home');
         Navigator.of(context).pushReplacementNamed('/home');
+        log('4- Navigation completed');
       }
+    }
+  }
+
+  void _handleGoogleSignIn() async {
+    log('1- Start Google Sign In');
+    final success = await _controller.signInWithGoogle();
+    log('2- After Google Sign In - Success: $success');
+    if (success && mounted) {
+      _controller.showMessage(context, 'Signed in with Google successfully!');
+      log('3- Navigating to Home');
+      Navigator.of(context).pushReplacementNamed('/home');
+      log('4- Navigation completed');
     }
   }
 

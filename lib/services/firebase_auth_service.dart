@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:developer';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'https://www.googleapis.com/auth/contacts.readonly'],
+  );
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -19,19 +23,28 @@ class FirebaseAuthService {
     required String displayName,
   }) async {
     try {
+      log('Starting email sign-up process for: $email');
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       // Update user profile with display name
       await userCredential.user?.updateDisplayName(displayName);
+      log('User profile updated with display name: $displayName');
 
       // Create user document in Firestore
-      await _createUserDocument(userCredential.user!, displayName);
+      await _createUserDocument(
+        userCredential.user!,
+        displayName,
+        provider: 'email',
+      );
+      log('User document created in Firestore for: $email');
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      log('Firebase Auth Exception during sign-up: ${e.code} - ${e.message}');
       throw _getErrorMessage(e);
     } catch (e) {
+      log('Unexpected error during sign-up: $e');
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -42,18 +55,22 @@ class FirebaseAuthService {
     required String password,
   }) async {
     try {
+      log('Starting email sign-in process for: $email');
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      log('Email sign-in successful for: $email');
 
       // Update last login time
       await _updateLastLogin(userCredential.user!);
 
       return userCredential;
     } on FirebaseAuthException catch (e) {
+      log('Firebase Auth Exception during sign-in: ${e.code} - ${e.message}');
       throw _getErrorMessage(e);
     } catch (e) {
+      log('Unexpected error during sign-in: $e');
       throw 'An unexpected error occurred. Please try again.';
     }
   }
@@ -120,19 +137,35 @@ class FirebaseAuthService {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
+        log('Starting account deletion for user: ${user.email}');
+
         // Delete user document from Firestore
         await _firestore.collection('users').doc(user.uid).delete();
+        log('User document deleted from Firestore');
 
         // Delete user from Authentication
         await user.delete();
+        log('User deleted from Firebase Authentication');
+
+        log('Account deletion completed successfully for: ${user.email}');
       }
+    } on FirebaseAuthException catch (e) {
+      log(
+        'Firebase Auth Exception during account deletion: ${e.code} - ${e.message}',
+      );
+      throw _getErrorMessage(e);
     } catch (e) {
+      log('Unexpected error during account deletion: $e');
       throw 'Error deleting account. Please try again.';
     }
   }
 
   // Create user document in Firestore
-  Future<void> _createUserDocument(User user, String displayName) async {
+  Future<void> _createUserDocument(
+    User user,
+    String displayName, {
+    String provider = 'email',
+  }) async {
     await _firestore.collection('users').doc(user.uid).set({
       'uid': user.uid,
       'email': user.email,
@@ -141,6 +174,8 @@ class FirebaseAuthService {
       'createdAt': FieldValue.serverTimestamp(),
       'lastLoginAt': FieldValue.serverTimestamp(),
       'isEmailVerified': user.emailVerified,
+      'phoneNumber': user.phoneNumber,
+      'provider': provider, // Add provider info
     });
   }
 
@@ -162,6 +197,82 @@ class FirebaseAuthService {
     } catch (e) {
       throw 'Error fetching user data. Please try again.';
     }
+  }
+
+  // Sign in with Google
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      log('Starting Google Sign-In process...');
+
+      // Force sign out to ensure clean state
+      await _googleSignIn.signOut();
+      log('Signed out from any previous Google session');
+
+      log('Attempting to sign in with Google...');
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      log('Google user selected: ${googleUser?.email}');
+
+      if (googleUser == null) {
+        log('Google Sign-In was cancelled by user');
+        throw 'Sign in with Google was cancelled';
+      }
+
+      // Obtain the auth details from the request
+      log('Getting Google authentication details...');
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      log('Google authentication obtained successfully');
+
+      // Check if we have the required tokens
+      if (googleAuth.accessToken == null && googleAuth.idToken == null) {
+        log('Error: No access token or ID token received from Google');
+        throw 'Failed to get authentication tokens from Google';
+      }
+
+      // Create a new credential
+      log('Creating Google credential...');
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      log('Google credential created successfully');
+
+      // Sign in with the credential
+      log('Signing in with Google credential...');
+      UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+      log('Google Sign-In successful for user: ${userCredential.user?.email}');
+
+      // Create user document in Firestore
+      log('Creating user document in Firestore...');
+      await _createUserDocument(
+        userCredential.user!,
+        googleUser.displayName ?? 'Google User',
+        provider: 'google',
+      );
+      log('User document created successfully');
+
+      // Update last login time
+      await _updateLastLogin(userCredential.user!);
+      log('Last login time updated');
+
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      log(
+        'Firebase Auth Exception during Google Sign-In: ${e.code} - ${e.message}',
+      );
+      throw _getErrorMessage(e);
+    } catch (e) {
+      log('Error during Google Sign-In: $e');
+      throw 'An error occurred during Google sign in: ${e.toString()}';
+    }
+  }
+
+  // Sign out from Google
+  Future<void> signOutFromGoogle() async {
+    await _googleSignIn.signOut();
+    await _auth.signOut();
   }
 
   // Get error message from FirebaseAuthException

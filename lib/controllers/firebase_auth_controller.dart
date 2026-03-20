@@ -31,6 +31,24 @@ class FirebaseAuthController {
   String? get userPhotoURL => _authService.userPhotoURL;
   bool get isEmailVerified => _authService.isEmailVerified;
 
+  // Sign in with Google
+  Future<bool> signInWithGoogle() async {
+    _setLoading(true);
+    _clearMessages();
+
+    try {
+      await _authService.signInWithGoogle();
+      _clearControllers();
+      _setSuccessMessage('Signed in with Google successfully!');
+      return true;
+    } catch (e) {
+      _setErrorMessage(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // Sign up with email and password
   Future<bool> signUp() async {
     if (!_validateSignUpForm()) return false;
@@ -231,6 +249,11 @@ class FirebaseAuthController {
 
     if (passwordController.text.isEmpty) {
       _setErrorMessage('Please enter your password');
+      return false;
+    }
+
+    if (passwordController.text.length < 6) {
+      _setErrorMessage('Password must be at least 6 characters');
       return false;
     }
 
